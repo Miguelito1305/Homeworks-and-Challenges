@@ -1,48 +1,37 @@
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
-import { useState } from 'react'; // Importamos useState para manejar el estado de login
+import { useUser, UserProvider } from './UserContext'; // Contexto para el usuario
 import Home from './components/Home';
-import About from './components/About';
 import Profile from './components/Profile';
 import Dashboard from './components/Dashboard';
+import LoginRegister from './components/LoginRegister'; // Componente para el login y registro
 
 function App() {
-  const [isLoggedIn, setIsLoggedIn] = useState(false); // Estado para manejar el login falso
-
-  // Función para simular el login
-  const fakeLogin = () => setIsLoggedIn(true);
-  // Función para simular el logout
-  const fakeLogout = () => setIsLoggedIn(false);
+  const { user } = useUser(); // Accedemos al usuario registrado desde el contexto
 
   return (
     <Router>
-      <div>
-        {/* Botones para simular el login/logout */}
-        <button onClick={fakeLogin}>Iniciar Sesión Falsa</button>
-        <button onClick={fakeLogout}>Cerrar Sesión Falsa</button>
+      <Routes>
+        {/* Ruta pública: Home */}
+        <Route path="/" element={<Home />} />
 
-        <p>{isLoggedIn ? 'Estás logueado' : 'No estás logueado'}</p> {/* Indicador del estado de login */}
+        {/* Ruta para el login/registro */}
+        <Route path="/login" element={<LoginRegister />} />
 
-        <Routes>
-          {/* Rutas públicas */}
-          <Route path="/" element={<Home />} />
-          <Route path="/about" element={<About />} />
+        {/* Rutas protegidas: Profile y Dashboard */}
+        <Route path="/profile" element={user ? <Profile /> : <Navigate to="/login" />} />
+        <Route path="/dashboard" element={user ? <Dashboard /> : <Navigate to="/login" />} />
 
-          {/* Rutas privadas (requiere login) */}
-          <Route
-            path="/profile"
-            element={isLoggedIn ? <Profile /> : <Navigate to="/" />} // Redirige a Home si no está logueado
-          />
-          <Route
-            path="/dashboard"
-            element={isLoggedIn ? <Dashboard /> : <Navigate to="/" />} // Redirige a Home si no está logueado
-          />
-
-          {/* Ruta de redirección */}
-          <Route path="/redirect" element={<Navigate to="/" />} />
-        </Routes>
-      </div>
+        {/* Redirecciona a Home si se intenta acceder a una ruta inválida */}
+        <Route path="*" element={<Navigate to="/" />} />
+      </Routes>
     </Router>
   );
 }
 
-export default App;
+export default function MainApp() {
+  return (
+    <UserProvider>
+      <App />
+    </UserProvider>
+  );
+}
